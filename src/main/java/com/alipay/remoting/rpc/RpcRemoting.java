@@ -48,7 +48,7 @@ public abstract class RpcRemoting extends BaseRemoting {
         RpcProtocolManager.initProtocols();
     }
     /** logger */
-    private static final Logger        logger = BoltLoggerFactory.getLogger("RpcRemoting");
+    protected static final Logger        logger = BoltLoggerFactory.getLogger("RpcRemoting");
 
     /** address parser to get custom args */
     protected RemotingAddressParser    addressParser;

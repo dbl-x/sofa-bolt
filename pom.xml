@@ -22,7 +22,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.alipay.sofa</groupId>
     <artifactId>bolt</artifactId>
-    <version>1.4.6</version>
+    <version>1.4.6-zhubalipay-debug-1</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -92,6 +92,17 @@
     </properties>
 
     <dependencies>
+        <dependency>
+        <groupId>com.alibaba</groupId>
+        <artifactId>fastjson</artifactId>
+        <version>1.1.46.sec04</version>
+        </dependency>
+        <dependency>
+        <groupId>com.alipay.common</groupId>
+        <artifactId>tracer</artifactId>
+        <version>2.3.3</version>
+        <scope>provided</scope>
+        </dependency>
         <!-- default scope -->
         <dependency>
             <groupId>org.slf4j</groupId>

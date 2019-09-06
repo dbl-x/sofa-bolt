@@ -16,6 +16,8 @@
  */
 package com.alipay.remoting.rpc;
 
+import com.alipay.common.tracer.context.AbstractLogContext;
+import com.alipay.common.tracer.util.TracerContextUtil;
 import com.alipay.remoting.CommandFactory;
 import com.alipay.remoting.Connection;
 import com.alipay.remoting.DefaultConnectionManager;
@@ -62,9 +64,18 @@ public class RpcClientRemoting extends RpcRemoting {
     public Object invokeSync(Url url, Object request, InvokeContext invokeContext, int timeoutMillis)
                                                                                                      throws RemotingException,
                                                                                                      InterruptedException {
+        String rpcId = AbstractLogContext.get().getRpcId();
+        String traceId = TracerContextUtil.getTraceId();
+        long createConnStart = System.currentTimeMillis();
         final Connection conn = getConnectionAndInitInvokeContext(url, invokeContext);
+        long createConnEnd = System.currentTimeMillis();
         this.connectionManager.check(conn);
-        return this.invokeSync(conn, request, invokeContext, timeoutMillis);
+        Object result = this.invokeSync(conn, request, invokeContext, timeoutMillis);
+        logger.info(
+                "rpcId:{} traceId:{} create conn cost: {}ms, invokeSync cost: {}, timeout: {}ms",
+                rpcId, traceId, createConnEnd - createConnStart, System.currentTimeMillis()
+                                                                                     - createConnStart, timeoutMillis);
+        return result;
     }
 
     /**

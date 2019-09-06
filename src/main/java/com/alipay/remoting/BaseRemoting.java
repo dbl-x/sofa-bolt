@@ -18,6 +18,10 @@ package com.alipay.remoting;
 
 import java.util.concurrent.TimeUnit;
 
+import com.alibaba.fastjson.JSON;
+import com.alipay.common.tracer.context.AbstractLogContext;
+import com.alipay.common.tracer.util.TracerContextUtil;
+import com.alipay.remoting.rpc.ResponseCommand;
 import org.slf4j.Logger;
 
 import com.alipay.remoting.exception.RemotingException;
@@ -58,6 +62,9 @@ public abstract class BaseRemoting {
     protected RemotingCommand invokeSync(final Connection conn, final RemotingCommand request,
                                          final int timeoutMillis) throws RemotingException,
                                                                  InterruptedException {
+        String rpcId = AbstractLogContext.get().getRpcId();
+        String traceId = TracerContextUtil.getTraceId();
+        long start = System.currentTimeMillis();
         final InvokeFuture future = createInvokeFuture(request, request.getInvokeContext());
         conn.addInvokeFuture(future);
         try {
@@ -82,8 +89,22 @@ public abstract class BaseRemoting {
             }
             logger.error("Exception caught when sending invocation, id={}", request.getId(), e);
         }
+        long asyncWrite = System.currentTimeMillis();
         RemotingCommand response = future.waitResponse(timeoutMillis);
 
+        if (response == null) {
+            logger.info("rpcId:{} traceId:{} asyncWrite cost: {}, wait: {}, response: {}", rpcId,
+                    traceId, asyncWrite - start, System.currentTimeMillis() - asyncWrite,
+                    "null response");
+            } else if (response instanceof ResponseCommand) {
+            logger.info("rpcId:{} traceId:{} asyncWrite cost: {}, wait: {}, response: {}", rpcId,
+                    traceId, asyncWrite - start, System.currentTimeMillis() - asyncWrite,
+                    ((ResponseCommand) response).getResponseStatus().name());
+            } else {
+            logger.info("rpcId:{} traceId:{} asyncWrite cost: {}, wait: {}, response: {}", rpcId,
+                    traceId, asyncWrite - start, System.currentTimeMillis() - asyncWrite,
+                    JSON.toJSONString(response));
+            }
         if (response == null) {
             conn.removeInvokeFuture(request.getId());
             response = this.commandFactory.createTimeoutResponse(conn.getRemoteAddress());
